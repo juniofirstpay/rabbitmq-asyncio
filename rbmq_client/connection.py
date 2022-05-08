@@ -3,9 +3,9 @@ import structlog
 logger = structlog.get_logger()
 
 
-def get_async_connection(callback=None):
+def get_async_connection(username, password, callback=None):
     logger.msg("Connection Parameters")
-    credentials = pika.PlainCredentials('guest', 'guest')
+    credentials = pika.PlainCredentials(username, password)
     connection_parameters = pika.ConnectionParameters(credentials=credentials)
     connection = pika.SelectConnection(connection_parameters)
     logger.msg("Connection Configured")
@@ -36,10 +36,10 @@ def get_async_connection(callback=None):
         connection.close()
         logger.msg("Connection Closed")
 
-def get_sync_connection():
+def get_sync_connection(username, password):
     logger = structlog.get_logger()
     logger.msg("Connection Parameters")
-    credentials = pika.PlainCredentials('guest', 'guest')
+    credentials = pika.PlainCredentials(username, password)
     connection_parameters = pika.ConnectionParameters(credentials=credentials)
     connection = pika.BlockingConnection(connection_parameters)
     logger.msg("Connection Configured")
