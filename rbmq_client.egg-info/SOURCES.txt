@@ -1,0 +1,11 @@
+setup.py
+rbmq_client/__init__.py
+rbmq_client/connection.py
+rbmq_client/consumer.py
+rbmq_client/publisher.py
+rbmq_client.egg-info/PKG-INFO
+rbmq_client.egg-info/SOURCES.txt
+rbmq_client.egg-info/dependency_links.txt
+rbmq_client.egg-info/not-zip-safe
+rbmq_client.egg-info/requires.txt
+rbmq_client.egg-info/top_level.txt
