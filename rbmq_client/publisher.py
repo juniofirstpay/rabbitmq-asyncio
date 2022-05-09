@@ -1,18 +1,18 @@
 class Publisher:
     class Transaction(object):
-        def __init__(self, channel, exchange, routing_key):
+        def __init__(self, channel, exchange, routing_key_prefix):
             self.channel = channel
             self.exchange = exchange
-            self.routing_key = routing_key
+            self.routing_key_prefix = routing_key_prefix
 
         def start(self):
             self.channel.tx_select()
             return self
 
-        def add(self, message):
+        def add(self, key,  message):
             self.channel.basic_publish(
                 self.exchange,
-                self.routing_key,
+                self.routing_key_prefix,
                 message,
             )
             return self
@@ -42,10 +42,10 @@ class Publisher:
         self.channel.close()
         self.logger.info("Channel closed")
 
-    def push(self, message):
+    def push(self, key, message):
         self.channel.basic_publish(
             self.queue_config.get("exchange"),
-            self.queue_config.get("routing_key"),
+            self.queue_config.get("routing_key_prefix") + key,
             message,
         )
 
@@ -64,5 +64,5 @@ class Publisher:
         return Publisher.Transaction(
             channel,
             self.queue_config.get("exchange"),
-            self.queue_config.get("routing_key"),
+            self.queue_config.get("routing_key_prefix"),
         ).start()
