@@ -42,8 +42,8 @@ class Publisher:
         self.channel.close()
         self.logger.info("Channel closed")
 
-    def push(self, key, message):
-        routing_key = self.queue_config.get("routing_key_prefix") + key
+    def push(self, key, message, routing_key_prefix=None):
+        routing_key = (routing_key_prefix or self.queue_config.get("routing_key_prefix") or "") + key
         self.logger.msg(f"Routing Key: {routing_key}")
         self.channel.basic_publish(
             self.queue_config.get("exchange"),
