@@ -3,6 +3,7 @@ setup.py
 rbmq_client/__init__.py
 rbmq_client/connection.py
 rbmq_client/consumer.py
+rbmq_client/consumer_async.py
 rbmq_client/publisher.py
 rbmq_client/publisher_async.py
 rbmq_client.egg-info/PKG-INFO
