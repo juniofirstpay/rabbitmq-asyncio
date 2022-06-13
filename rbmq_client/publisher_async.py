@@ -16,35 +16,62 @@ class PublisherAsync:
         self.queue_config = queue_config
 
         self._message_queue = queue.Queue(maxsize=10000)
+        self.open_retry_interval = 1
         
     def start(self):
         self.logger.info("Starting Thread")
+        old_connection_ioloop = None
+        if getattr(self, 'thread', None):
+            old_connection_ioloop = self.connection.ioloop
+            self.open_retry_interval *= 2
+
         self.thread = threading.Thread(target=self.run, daemon=False)
+        self.thread.name = f"Thread #{self.open_retry_interval}"
         self.thread.start()
+        
+        if old_connection_ioloop:
+            old_connection_ioloop.stop()
+
         return self
     
     def run(self):
         try:
             credentials = pika.PlainCredentials(self.credentials.get('username'), self.credentials.get('password'))
-            connection_parameters = pika.ConnectionParameters(host=self.credentials.get('host'), port=self.credentials.get('port'), credentials=credentials)
+            connection_parameters = pika.ConnectionParameters(
+                host=self.credentials.get('host'), 
+                port=self.credentials.get('port'), 
+                credentials=credentials,
+                connection_attempts=3,
+                retry_delay=5,
+                heartbeat=60)
             self.connection = pika.SelectConnection(connection_parameters)
             try:
                 def on_connection_close(*args, **kwargs):
-                    self.logger.msg("Connection closed callback")
+                    if not self._stopping:
+                        self.connection.ioloop.call_later(self.open_retry_interval, self.start)
+                        self.logger.msg("Connection closed callback")
 
                 def on_connection_open(connection):
                     self.logger.msg("Connection Open. Callback received")
                     self.connection.channel(on_open_callback=self.on_open)
-                
+
+                def on_connection_open_error(*args, **kwargs):
+                    self.logger.msg("Connection Open Error")
+                    self.connection.ioloop.call_later(self.open_retry_interval, self.start)
+
                 self.connection.add_on_open_callback(on_connection_open)
                 self.connection.add_on_close_callback(on_connection_close)
+                self.connection.add_on_open_error_callback(on_connection_open_error)
                 self.logger.msg("Starting IOLoop")
                 self.connection.ioloop.start()
             except Exception as e:
                 self.logger.msg(f"Exception: {e}")
                 if self.connection.is_open:
                     self.connection.close()
-                self.logger.msg("Connection Closed")
+                self.logger.msg("Connection Exception")
+                self.connection.ioloop.start()
+                self.connection.ioloop.call_later(self.open_retry_interval, self.start)
+                self.logger.msg(f"Connection Retry Interval {self.open_retry_interval}")
                 self.connection.ioloop.start()
             except KeyboardInterrupt as e:
                 self.logger.msg(f"Interrupt: {e}")
@@ -95,7 +122,7 @@ class PublisherAsync:
                                       callback=on_exchange_declare)
 
     def schedule_messaging(self):
-        if self._message_queue.empty() == False:
+        if self._message_queue.empty() == False and (not self.channel or not self.channel.is_open):
             try:
                 message_obj = self._message_queue.get()
                 self.publish(message_obj.get('key'), 
