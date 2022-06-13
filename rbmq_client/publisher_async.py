@@ -61,7 +61,7 @@ class PublisherAsync:
 
                 self.connection.add_on_open_callback(on_connection_open)
                 self.connection.add_on_close_callback(on_connection_close)
-                self.connection.add_on_open_error_callback(on_connection_open_error)
+                # self.connection.add_on_open_error_callback(on_connection_open_error)
                 self.logger.msg("Starting IOLoop")
                 self.connection.ioloop.start()
             except Exception as e:
@@ -69,7 +69,7 @@ class PublisherAsync:
                 if self.connection.is_open:
                     self.connection.close()
                 self.logger.msg("Connection Exception")
-                self.connection.ioloop.start()
+                # self.connection.ioloop.start()
                 self.connection.ioloop.call_later(self.open_retry_interval, self.start)
                 self.logger.msg(f"Connection Retry Interval {self.open_retry_interval}")
                 self.connection.ioloop.start()

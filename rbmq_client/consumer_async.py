@@ -14,34 +14,60 @@ class ConsumerAsync:
         self.credentials = credentials
         self.queue_config = queue_config
         self.on_message_callback = on_message_callback
+        self.open_retry_interval = 1
         
     def start(self):
         self.logger.info("Starting Thread")
+        old_connection_ioloop = None
+        if getattr(self, 'thread', None):
+            old_connection_ioloop = self.connection.ioloop
+            self.open_retry_interval *= 2
+
         self.thread = threading.Thread(target=self.run, daemon=False)
+        self.thread.name = f"Thread #{self.open_retry_interval}"
         self.thread.start()
+        
+        if old_connection_ioloop:
+            old_connection_ioloop.stop()
+
         return self
     
     def run(self):
         try:
             credentials = pika.PlainCredentials(self.credentials.get('username'), self.credentials.get('password'))
-            connection_parameters = pika.ConnectionParameters(host=self.credentials.get('host'), port=self.credentials.get('port'), credentials=credentials)
+            connection_parameters = pika.ConnectionParameters(
+                host=self.credentials.get('host'), 
+                port=self.credentials.get('port'), 
+                credentials=credentials,
+                connection_attempts=3,
+                retry_delay=5,
+                heartbeat=60)
             self.connection = pika.SelectConnection(connection_parameters)
             try:
                 def on_connection_close(*args, **kwargs):
                     self.logger.msg("Connection closed callback")
+                    self.connection.ioloop.call_later(self.open_retry_interval, self.start)
 
                 def on_connection_open(connection):
                     self.logger.msg("Connection Open. Callback received")
                     self.connection.channel(on_open_callback=self.on_open)
                 
+                def on_connection_open_error(*args, **kwargs):
+                    self.logger.msg("Connection Open Error")
+                    self.connection.ioloop.call_later(self.open_retry_interval, self.start)
+
                 self.connection.add_on_open_callback(on_connection_open)
                 self.connection.add_on_close_callback(on_connection_close)
+                self.connection.add_on_open_error_callback(on_connection_open_error)
                 self.logger.msg("Starting IOLoop")
                 self.connection.ioloop.start()
+                self.connection.ioloop.call_later(self.open_retry_interval, self.start)
+                self.logger.msg(f"Connection Retry Interval {self.open_retry_interval}")
             except Exception as e:
                 self.logger.msg(f"Exception: {e}")
                 self.connection.close()
-                self.logger.msg("Connection Closed")
+                self.connection.ioloop.call_later(self.open_retry_interval, self.start)
+                self.logger.msg(f"Connection Retry Interval {self.open_retry_interval}")
                 self.connection.ioloop.start()
             except KeyboardInterrupt as e:
                 self.logger.msg(f"Interrupt: {e}")
