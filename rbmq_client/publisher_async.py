@@ -42,7 +42,8 @@ class PublisherAsync:
                 self.connection.ioloop.start()
             except Exception as e:
                 self.logger.msg(f"Exception: {e}")
-                self.connection.close()
+                if self.connection.is_open:
+                    self.connection.close()
                 self.logger.msg("Connection Closed")
                 self.connection.ioloop.start()
             except KeyboardInterrupt as e:
