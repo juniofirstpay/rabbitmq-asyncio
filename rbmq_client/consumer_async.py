@@ -65,7 +65,8 @@ class ConsumerAsync:
                 self.logger.msg(f"Connection Retry Interval {self.open_retry_interval}")
             except Exception as e:
                 self.logger.msg(f"Exception: {e}")
-                self.connection.close()
+                if self.connection.is_open:
+                    self.connection.close()
                 self.connection.ioloop.call_later(self.open_retry_interval, self.start)
                 self.logger.msg(f"Connection Retry Interval {self.open_retry_interval}")
                 self.connection.ioloop.start()
