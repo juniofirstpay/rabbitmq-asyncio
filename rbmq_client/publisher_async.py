@@ -122,7 +122,7 @@ class PublisherAsync:
                                       callback=on_exchange_declare)
 
     def schedule_messaging(self):
-        if self._message_queue.empty() == False and (not self.channel or not self.channel.is_open):
+        if self._message_queue.empty() == False and self.channel and self.channel.is_open:
             try:
                 message_obj = self._message_queue.get()
                 self.publish(message_obj.get('key'), 
