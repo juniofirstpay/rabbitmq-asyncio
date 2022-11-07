@@ -15,7 +15,7 @@ class PublisherAsync:
         self.credentials = credentials
         self.queue_config = queue_config
 
-        self._message_queue = queue.Queue(maxsize=10000)
+        self._message_queue = queue.Queue(maxsize=1000000)
         self.open_retry_interval = 1
         
     def start(self):
@@ -125,9 +125,11 @@ class PublisherAsync:
         if self._message_queue.empty() == False and self.channel and self.channel.is_open:
             try:
                 message_obj = self._message_queue.get()
-                self.publish(message_obj.get('key'), 
+                sent = self.publish(message_obj.get('key'), 
                             message_obj.get('message'), 
                             message_obj.get('routing_key_prefix', None))
+                if sent == False:
+                    self._message_queue.put(message_obj)
             except Exception as e:
                 self.logger.error(f"Publishing Error: {e}")
         self.connection.ioloop.call_later(0.3, self.schedule_messaging)
@@ -136,13 +138,14 @@ class PublisherAsync:
     def publish(self, key, message, routing_key_prefix=None):
         if not self.channel or not self.channel.is_open:
             self.logger.info(f"Skipping Message: {message}")
-            return
+            return False
 
         routing_key = (routing_key_prefix or self.queue_config.get("routing_key_prefix") or "") + key
         self.logger.msg(f"Routing Key: {routing_key}")
         self.channel.basic_publish(self.queue_config.get("exchange"),
                                    routing_key,
                                    message)
+        return True
     
     def push(self, key, message, routing_key_prefix=None):
         if not self.thread.is_alive:
