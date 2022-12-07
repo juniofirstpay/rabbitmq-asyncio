@@ -6,7 +6,7 @@ import structlog
 
 class PublisherAsync:
 
-    def __init__(self, credentials, queue_config) -> None:
+    def __init__(self, credentials, queue_config, **kwargs) -> None:
         self.connection = None
         self.channel = None
         self.logger = structlog.get_logger()
@@ -15,7 +15,9 @@ class PublisherAsync:
         self.credentials = credentials
         self.queue_config = queue_config
 
-        self._message_queue = queue.Queue(maxsize=1000000)
+        queue_max_size = kwargs.get('queue_max_size', 10000000)
+        
+        self._message_queue = queue.Queue(maxsize=10000000)
         self.open_retry_interval = 1
         
     def start(self):
@@ -138,6 +140,11 @@ class PublisherAsync:
     def publish(self, key, message, routing_key_prefix=None):
         if not self.channel or not self.channel.is_open:
             self.logger.info(f"Skipping Message: {message}")
+            self._message_queue.put({
+                'key': key,
+                'message': message,
+                'routing_key_prefix': routing_key_prefix
+            })
             return False
 
         routing_key = (routing_key_prefix or self.queue_config.get("routing_key_prefix") or "") + key
