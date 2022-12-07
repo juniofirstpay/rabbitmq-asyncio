@@ -97,8 +97,8 @@ class PublisherAsync:
         if self.connection and self.connection.is_open:
             self.connection.close()
         
-        if self.thread.is_alive:
-            self.thread.stop()
+        if self.thread.is_alive():
+            self.thread._stop()
     
     def on_open(self, channel):
         channel.add_on_close_callback(self.on_close)
