@@ -91,7 +91,7 @@ class ConsumerServer(object):
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.sock.bind(server_address)
             self.sock.listen(1)
-            self.default_handle_method()
+            self.__default_handle_method()
         except socket.error as e:
             if self.log:
                 logger.debug(traceback.format_exc())
