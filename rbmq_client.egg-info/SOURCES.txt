@@ -6,6 +6,7 @@ rbmq_client/consumer.py
 rbmq_client/consumer_async.py
 rbmq_client/publisher.py
 rbmq_client/publisher_async.py
+rbmq_client/server.py
 rbmq_client.egg-info/PKG-INFO
 rbmq_client.egg-info/SOURCES.txt
 rbmq_client.egg-info/dependency_links.txt
