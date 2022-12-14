@@ -29,6 +29,7 @@ class PublisherAsync:
 
         self.thread = threading.Thread(target=self.run, daemon=False)
         self.thread.name = f"Thread #{self.open_retry_interval}"
+        self.thread.setDaemon(True)
         self.thread.start()
         
         if old_connection_ioloop:

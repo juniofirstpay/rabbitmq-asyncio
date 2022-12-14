@@ -25,6 +25,7 @@ class ConsumerAsync:
 
         self.thread = threading.Thread(target=self.run, daemon=False)
         self.thread.name = f"Thread #{self.open_retry_interval}"
+        self.thread.setDaemon(True)
         self.thread.start()
         
         if old_connection_ioloop:
@@ -93,7 +94,7 @@ class ConsumerAsync:
             self.connection.close()
         
         if self.thread.is_alive:
-            self.thread.stop()
+            self.thread._stop()
     
     def on_open(self, channel):
         channel.add_on_close_callback(self.on_close)
