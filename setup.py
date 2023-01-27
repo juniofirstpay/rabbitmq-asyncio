@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name='rbmq-client',
     packages=['rbmq_client'],
-    version='1.0.0',
+    version='1.0.1',
     author="Develper Junio",
     author_email='developer@junio.in',
     classifiers=[
