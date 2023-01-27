@@ -19,6 +19,7 @@ class PublisherAsync:
         
         self._message_queue = queue.Queue(maxsize=10000000)
         self.open_retry_interval = 1
+        self.should_auto_close = False
         
     def start(self):
         self.logger.info("Starting Thread")
@@ -109,7 +110,6 @@ class PublisherAsync:
 
 
     def on_close(self, channel, *args, **kwargs):
-        print(channel, *args)
         self.logger.critical("Channel Closed")
         if not self._stopping:
             if self.connection.is_open:
@@ -133,6 +133,8 @@ class PublisherAsync:
                             message_obj.get('routing_key_prefix', None))
                 if sent == False:
                     self._message_queue.put(message_obj)
+                elif self.should_auto_close == True and self._message_queue.empty() == True:
+                    self.close()
             except Exception as e:
                 self.logger.error(f"Publishing Error: {e}")
         self.connection.ioloop.call_later(0.3, self.schedule_messaging)
@@ -163,3 +165,5 @@ class PublisherAsync:
             'message': message,
             'routing_key_prefix': routing_key_prefix
         })
+        
+    
