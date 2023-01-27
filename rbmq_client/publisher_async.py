@@ -68,21 +68,25 @@ class PublisherAsync:
                 self.connection.add_on_open_error_callback(on_connection_open_error)
                 self.logger.msg("Starting IOLoop")
                 self.connection.ioloop.start()
+            except KeyboardInterrupt as e:
+                self.logger.msg(f"Interrupt: {e}")
+                self.connection.close()
+                self.logger.msg("Connection Closed")
             except Exception as e:
                 self.logger.msg(f"Exception: {e}")
                 if self.connection.is_open:
                     self.connection.close()
                 self.logger.msg("Connection Exception")
                 # self.connection.ioloop.start()
-                self.connection.ioloop.call_later(self.open_retry_interval, self.start)
-                self.logger.msg(f"Connection Retry Interval {self.open_retry_interval}")
-                self.connection.ioloop.start()
-            except KeyboardInterrupt as e:
-                self.logger.msg(f"Interrupt: {e}")
-                self.connection.close()
-                self.logger.msg("Connection Closed")
+                if not self._stopping:
+                    self.connection.ioloop.call_later(self.open_retry_interval, self.start)
+                    self.logger.msg(f"Connection Retry Interval {self.open_retry_interval}")
+                    self.connection.ioloop.start()
+            
         except Exception as e:
             self.logger.info(e)
+            
+        self.logger.info("Thread execution finished")
 
     def close(self) -> None:
         self._stopping = True
@@ -98,8 +102,8 @@ class PublisherAsync:
         if self.connection and self.connection.is_open:
             self.connection.close()
         
-        if self.thread.is_alive():
-            self.thread._stop()
+        # if self.thread.is_alive():
+        #     self.thread._stop()
     
     def on_open(self, channel):
         channel.add_on_close_callback(self.on_close)
@@ -139,7 +143,9 @@ class PublisherAsync:
             except Exception as e:
                 self.logger.error(f"Publishing Error: {e}")
                 traceback.print_exc()
-        self.connection.ioloop.call_later(0.3, self.schedule_messaging)
+        
+        if not self._stopping:
+            self.connection.ioloop.call_later(0.3, self.schedule_messaging)
 
 
     def publish(self, key, message, routing_key_prefix=None):
