@@ -101,6 +101,7 @@ class PublisherAsync:
         
         if self.connection and self.connection.is_open:
             self.connection.close()
+            self.connection.ioloop.stop()
         
         # if self.thread.is_alive():
         #     self.thread._stop()
