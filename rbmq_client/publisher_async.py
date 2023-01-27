@@ -2,7 +2,7 @@ import threading
 import queue
 import pika
 import structlog
-
+import traceback
 
 class PublisherAsync:
 
@@ -92,8 +92,7 @@ class PublisherAsync:
 
         if not self.channel:
             self.logger.info("No channel exists to close")
-        
-        if not self.channel.is_open:
+        elif not self.channel.is_open:
             self.logger.info("Channel is already closed")
         
         if self.connection and self.connection.is_open:
@@ -134,9 +133,12 @@ class PublisherAsync:
                 if sent == False:
                     self._message_queue.put(message_obj)
                 elif self.should_auto_close == True and self._message_queue.empty() == True:
+                    self.logger.msg(f"Message sent and closing automatically")
                     self.close()
+                    return 
             except Exception as e:
                 self.logger.error(f"Publishing Error: {e}")
+                traceback.print_exc()
         self.connection.ioloop.call_later(0.3, self.schedule_messaging)
 
 
