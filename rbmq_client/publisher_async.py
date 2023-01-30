@@ -139,7 +139,7 @@ class PublisherAsync:
                     self._message_queue.put(message_obj)
                 elif self.should_auto_close == True and self._message_queue.empty() == True:
                     self.logger.msg(f"Message sent and closing automatically")
-                    self.close()
+                    self.connection.ioloop.call_later(10, self.close)
                     return 
             except Exception as e:
                 self.logger.error(f"Publishing Error: {e}")
