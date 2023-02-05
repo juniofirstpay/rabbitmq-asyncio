@@ -9,9 +9,7 @@ logger = get_logger(__name__)
 
 class HealthCheckServer(object):
     
-    def __init__(self, 
-                 credentials: "dict",
-                 consumer: "dict",
+    def __init__(self,
                  ip: "str"='0.0.0.0', 
                  port: "int"=8000, 
                  handle_method: "Optional[Callable]"=None,
@@ -27,9 +25,6 @@ class HealthCheckServer(object):
         self.current_try_count = 0
 
         self.handle_method = handle_method or self.__default_handle_method
-        
-        self.__credentials = credentials
-        self.__consumer = consumer
     
     def __default_handle_method(self):
         """ Simple handle method that accepts the connection then closes.
