@@ -2,8 +2,8 @@ from setuptools import setup, find_packages
 
 setup(
     name='rbmq-client',
-    packages=['rbmq_client'],
-    version='1.0.2',
+    packages=['rbmq_client', 'rbmq_aio_client'],
+    version='2.1.0',
     author="Develper Junio",
     author_email='developer@junio.in',
     classifiers=[
@@ -15,6 +15,8 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
+        "addict==2.4.0",
+        "aio-pika==8.3.0",
         "appnope==0.1.3",
         "asttokens==2.0.5",
         "backcall==0.2.0",

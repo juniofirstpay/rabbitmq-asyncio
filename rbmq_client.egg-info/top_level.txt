@@ -1,1 +1,2 @@
+rbmq_aio_client
 rbmq_client
