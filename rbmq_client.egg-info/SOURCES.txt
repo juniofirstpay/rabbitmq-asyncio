@@ -2,6 +2,7 @@ README.md
 setup.py
 rbmq_aio_client/__init__.py
 rbmq_aio_client/subscriber.py
+rbmq_aio_client/publisher.py
 rbmq_client/__init__.py
 rbmq_client/connection.py
 rbmq_client/consumer.py

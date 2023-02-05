@@ -27,7 +27,9 @@ class Subscriber:
             for key, value in exchange_args.items():
                 self.__logger.debug(f"QueueProfile: {key}={value}")
         
-        connection: aio_pika.RobustConnection = await aio_pika.connect_robust(connection_args.uri, loop=loop)
+        connection: aio_pika.RobustConnection = await aio_pika.connect_robust(connection_args.uri, 
+                                                                              loop=loop, 
+                                                                              timeout=connection_args.timeout)
         
         self.__logger.info("Connection Established")
         channel: aio_pika.abc.AbstractChannel = await connection.channel()
@@ -50,7 +52,7 @@ class Subscriber:
                                                                             auto_delete=queue_args.auto_delete)
             self.__logger.info("Queue Declared")
             
-            await queue.bind(exchange, 
+            await queue.bind(exchange,
                              routing_key=queue_args.routing_key)
             self.__logger.info("Queue Bound")
             
