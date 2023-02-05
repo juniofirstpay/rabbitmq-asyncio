@@ -57,14 +57,13 @@ class Subscriber:
             async with queue.iterator() as queue_iter:
                 # Cancel consuming after __aexit__
                 async for message in queue_iter:
+                    message_info = message.info()
+                    self.__logger.info("Message received", id=message_info.get('message_id'))
+                
+                    if self.__debug:
+                        for key, value in message_info.items():
+                            self.__logger.debug("Message Info", key=key, value=value, id=message_info.get('message_id'))
                     try:
-                        message_info = message.info()
-                        self.__logger.info("Message received", id=message_info.get('message_id'))
-                    
-                        if self.__debug:
-                            for key, value in message_info.items():
-                                self.__logger.debug("Message Info", key=key, value=value, id=message_info.get('message_id'))
-                    
                         async with message.process(requeue=True):
                             payload = json.loads(message.body.decode())
                             
@@ -75,7 +74,7 @@ class Subscriber:
                             
                             self.__logger.info("Message processed successfully", id=message_info.get('message_id'))
                     except Exception as e:
-                        await message.reject(requeue=True)
+                        print(e)
 
     def run(self, connection, queue):
         try:
