@@ -66,12 +66,12 @@ class Subscriber:
                                 self.__logger.debug("Message Info", key=key, value=value, id=message_info.get('message_id'))
                     
                         async with message.process(requeue=True):
-                            message = json.loads(message.body.decode())
+                            payload = json.loads(message.body.decode())
                             
                             if self.__debug:
-                                self.__logger.debug(pprint.pformat(message), id=message_info.get('message_id'))        
+                                self.__logger.debug(pprint.pformat(payload), id=message_info.get('message_id'))        
                             
-                            self.__callback(message)
+                            self.__callback(payload)
                             
                             self.__logger.info("Message processed successfully", id=message_info.get('message_id'))
                     except Exception as e:
