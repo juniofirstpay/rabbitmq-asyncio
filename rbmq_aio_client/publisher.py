@@ -46,9 +46,9 @@ class Publisher:
                 self.__logger.debug('Message Published @ {}'.format(index))
                 self.__logger.debug('Message Profile: {}'.format(item.message_id))
                 
-            exchange.publish(item[0], item[1], timeout=item[2])
+            await exchange.publish(item[0], item[1], timeout=item[2])
         
-        connection.close()
+        await connection.close()
     
     def push(self, 
              routing_key: "str", 
