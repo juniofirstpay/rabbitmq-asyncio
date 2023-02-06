@@ -68,10 +68,11 @@ class Publisher:
         return self
     
     def run(self, connection, exchange):
-        try:
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(self.main(loop, connection, exchange))
-            loop.close()
-        except Exception as e:
-            print(e)
+        def __run():
+            try:
+                loop = asyncio.get_event_loop()
+                loop.run_until_complete(self.main(loop, connection, exchange))
+            except Exception as e:
+                print(e)
+        asyncio.run(__run())
     
