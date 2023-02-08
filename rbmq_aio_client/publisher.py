@@ -4,7 +4,7 @@ import asyncio
 import aio_pika
 import aio_pika.abc
 from structlog import get_logger
-from typing import List
+from typing import List, Union
 from datetime import datetime
 
 class Publisher:
@@ -15,12 +15,24 @@ class Publisher:
         self.__logger = get_logger()
         self.__messages: "List[aio_pika.Message, str]" = []
     
-    async def main(self, loop, connection_type: "str", exchange: "str"):   
-        connection_args = self.__config.connections.get(connection_type)
+    async def main(self, loop, connection_type: "Union[str, aio_pika.RobustConnection]", exchange: "str"):
+        if isinstance(connection_type, str):
+            connection_args = self.__config.connections.get(connection_type)
+            connection: aio_pika.RobustConnection = await aio_pika.connect_robust(connection_args.uri, 
+                                                                                loop=loop, 
+                                                                                timeout=connection_args.timeout)
+        elif isinstance(connection_type, aio_pika.RobustConnection):
+            connection = connection_type
+        else:
+            raise Exception("Invalid Connection Type")   
+        
+        
         exchange_args = self.__config.exchanges.get(exchange)
         
         if self.__debug:
-            self.__logger.debug(f"ConnectionProfile: {connection_args.uri}")
+            if isinstance(connection_args, dict):
+                self.__logger.debug(f"ConnectionProfile: {connection_args.uri}")
+                
             for key, value in exchange_args.items():
                 self.__logger.debug(f"QueueProfile: {key}={value}")
         

@@ -4,32 +4,41 @@ import asyncio
 import aio_pika
 import aio_pika.abc
 import pprint
+from typing import Union
 from structlog import get_logger
 from typing import Callable
 
 class Subscriber:
     
-    def __init__(self, config: "dict", callback: "Callable", debug=True):
+    def __init__(self, config: "dict", callback: "Callable", debug=True, expose_connection=False):
         self.__config = addict.Dict(config)
         self.__debug = debug
         self.__callback = callback
         self.__logger = get_logger()
+        self.__expose_connection = expose_connection
 
-    async def main(self, loop, connection_type: "str", queue: "str"):    
-        connection_args = self.__config.connections.get(connection_type)
+    async def main(self, loop, connection_type: "Union[str, aio_pika.RobustConnection]", queue: "str"):    
+        if isinstance(connection_type, str):
+            connection_args = self.__config.connections.get(connection_type)
+            connection: aio_pika.RobustConnection = await aio_pika.connect_robust(connection_args.uri, 
+                                                                                loop=loop, 
+                                                                                timeout=connection_args.timeout)
+        elif isinstance(connection_type, aio_pika.RobustConnection):
+            connection = connection_type
+        else:
+            raise Exception("Invalid Connection Type")
+        
         queue_args = self.__config.queues.get(queue)
         exchange_args = self.__config.exchanges.get(queue_args.exchange)
         
         if self.__debug:
-            self.__logger.debug(f"ConnectionProfile: {connection_args.uri}")
+            if isinstance(connection_args, dict):
+                self.__logger.debug(f"ConnectionProfile: {connection_args.uri}")
+                
             for key, value in queue_args.items():
                 self.__logger.debug(f"QueueProfile: {key}={value}")
             for key, value in exchange_args.items():
                 self.__logger.debug(f"QueueProfile: {key}={value}")
-        
-        connection: aio_pika.RobustConnection = await aio_pika.connect_robust(connection_args.uri, 
-                                                                              loop=loop, 
-                                                                              timeout=connection_args.timeout)
         
         self.__logger.info("Connection Established")
         channel: aio_pika.abc.AbstractChannel = await connection.channel()
@@ -71,8 +80,10 @@ class Subscriber:
                             
                             if self.__debug:
                                 self.__logger.debug(pprint.pformat(payload), id=message_info.get('message_id'))        
-                            
-                            self.__callback(payload)
+                            if self.__expose_connection == True:
+                                self.__callback(payload, connection=connection)
+                            else:
+                                self.__callback(payload)
                             
                             self.__logger.info("Message processed successfully", id=message_info.get('message_id'))
                     except Exception as e:
