@@ -4,6 +4,7 @@ import asyncio
 import aio_pika
 import aio_pika.abc
 import pprint
+import traceback
 from typing import Union
 from structlog import get_logger
 from typing import Callable
@@ -95,4 +96,5 @@ class Subscriber:
             loop.run_until_complete(self.main(loop, connection, queue))
             loop.close()
         except Exception as e:
+            traceback.print_exc()
             print(e)
