@@ -15,12 +15,12 @@ class Publisher:
         self.__logger = get_logger()
         self.__messages: "List[aio_pika.Message, str]" = []
     
-    async def main(self, loop, connection_type: "Union[str, aio_pika.RobustConnection]", exchange: "str"):
+    async def main(self, loop: "asyncio.AbstractEventLoop", connection_type: "Union[str, aio_pika.RobustConnection]", exchange: "str"):
         if isinstance(connection_type, str):
             connection_args = self.__config.connections.get(connection_type)
             connection: aio_pika.RobustConnection = await aio_pika.connect_robust(connection_args.uri, 
-                                                                                loop=loop, 
-                                                                                timeout=connection_args.timeout)
+                                                                                  loop=loop, 
+                                                                                  timeout=connection_args.timeout)
         elif isinstance(connection_type, aio_pika.RobustConnection):
             connection = connection_type
         else:
@@ -79,11 +79,13 @@ class Publisher:
         self.__messages.append([message, routing_key, publish_timeout])
         return self
     
-    def run(self, connection, exchange):
+    def run(self, connection, exchange, loop: "asyncio.AbstractEventLoop"=None):
         async def __run():
             try:
-                loop = asyncio.get_event_loop()
-                await self.main(loop, connection, exchange)
+                _loop = None
+                if loop is None:
+                    _loop = asyncio.get_event_loop()
+                await self.main(_loop, connection, exchange)
             except Exception as e:
                 print(e)
         asyncio.run(__run())

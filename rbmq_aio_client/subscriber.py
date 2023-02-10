@@ -22,8 +22,8 @@ class Subscriber:
         if isinstance(connection_type, str):
             connection_args = self.__config.connections.get(connection_type)
             connection: aio_pika.RobustConnection = await aio_pika.connect_robust(connection_args.uri, 
-                                                                                loop=loop, 
-                                                                                timeout=connection_args.timeout)
+                                                                                  loop=loop, 
+                                                                                  timeout=connection_args.timeout)
         elif isinstance(connection_type, aio_pika.RobustConnection):
             connection = connection_type
         else:
@@ -80,9 +80,12 @@ class Subscriber:
                             payload = json.loads(message.body.decode())
                             
                             if self.__debug:
-                                self.__logger.debug(pprint.pformat(payload), id=message_info.get('message_id'))        
+                                self.__logger.debug(pprint.pformat(payload), 
+                                                    id=message_info.get('message_id'))
                             if self.__expose_connection == True:
-                                self.__callback(payload, connection=connection)
+                                self.__callback(payload, 
+                                                connection=connection, 
+                                                loop=loop)
                             else:
                                 self.__callback(payload)
                             
