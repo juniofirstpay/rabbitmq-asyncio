@@ -80,13 +80,14 @@ class Publisher:
         return self
     
     def run(self, connection, exchange, loop: "asyncio.AbstractEventLoop"=None):
-        async def __run():
-            try:
-                _loop = None
-                if loop is None:
+        if loop:
+            loop.run_until_complete(self.main(loop, connection, exchange))
+        else:
+            async def __run():
+                try:
                     _loop = asyncio.get_event_loop()
-                await self.main(_loop, connection, exchange)
-            except Exception as e:
-                print(e)
-        asyncio.run(__run())
+                    await self.main(_loop, connection, exchange)
+                except Exception as e:
+                    print(e)
+            asyncio.run(__run())
     
