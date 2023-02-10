@@ -30,15 +30,15 @@ class Publisher:
         exchange_args = self.__config.exchanges.get(exchange)
         
         if self.__debug:
-            if isinstance(connection_args, dict):
+            if isinstance(connection_type, str) and isinstance(connection_args, dict):
                 self.__logger.debug(f"ConnectionProfile: {connection_args.uri}")
                 
             for key, value in exchange_args.items():
                 self.__logger.debug(f"QueueProfile: {key}={value}")
         
-        connection: aio_pika.RobustConnection = await aio_pika.connect_robust(connection_args.uri, 
-                                                                              loop=loop, 
-                                                                              timeout=connection_args.timeout)
+        # connection: aio_pika.RobustConnection = await aio_pika.connect_robust(connection_args.uri, 
+        #                                                                       loop=loop, 
+        #                                                                       timeout=connection_args.timeout)
         self.__logger.info("Connection Established")
         
         channel: aio_pika.abc.AbstractChannel = await connection.channel()
