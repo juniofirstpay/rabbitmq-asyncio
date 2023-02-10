@@ -33,7 +33,7 @@ class Subscriber:
         exchange_args = self.__config.exchanges.get(queue_args.exchange)
         
         if self.__debug:
-            if isinstance(connection_args, dict):
+            if isinstance(connection_type, str) and isinstance(connection_args, dict):
                 self.__logger.debug(f"ConnectionProfile: {connection_args.uri}")
                 
             for key, value in queue_args.items():
