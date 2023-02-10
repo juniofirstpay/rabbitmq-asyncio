@@ -81,7 +81,7 @@ class Publisher:
     
     def run(self, connection, exchange, loop: "asyncio.AbstractEventLoop"=None):
         if loop:
-            loop.run_until_complete(self.main(loop, connection, exchange))
+            loop.create_task(self.main(loop, connection, exchange))
         else:
             async def __run():
                 try:
