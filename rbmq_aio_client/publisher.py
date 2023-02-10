@@ -56,7 +56,7 @@ class Publisher:
         for index, item in enumerate(self.__messages):
             if self.__debug:
                 self.__logger.debug('Message Published @ {}'.format(index))
-                self.__logger.debug('Message Profile: {}'.format(item.message_id))
+                self.__logger.debug('Message Profile: {}'.format(item[0].message_id))
                 
             await exchange.publish(item[0], item[1], timeout=item[2])
         
