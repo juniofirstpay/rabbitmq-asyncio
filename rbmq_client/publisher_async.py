@@ -17,7 +17,7 @@ class PublisherAsync:
 
         queue_max_size = kwargs.get('queue_max_size', 10000000)
         
-        self._message_queue = queue.Queue(maxsize=10000000)
+        self._message_queue = queue.Queue(queue_max_size)
         self.open_retry_interval = 1
         self.should_auto_close = False
         

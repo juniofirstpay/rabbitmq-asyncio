@@ -59,6 +59,7 @@ class Subscriber:
             channel: aio_pika.abc.AbstractChannel = await connection.channel()
             # Declaring queue
             queue: aio_pika.abc.AbstractQueue = await channel.declare_queue(queue_args.name,
+                                                                            durable=(queue_args.durable or False),
                                                                             auto_delete=queue_args.auto_delete)
             self.__logger.info("Queue Declared")
             
@@ -85,7 +86,8 @@ class Subscriber:
                             if self.__expose_connection == True:
                                 self.__callback(payload, 
                                                 connection=connection, 
-                                                loop=loop)
+                                                loop=loop,
+                                                exchange=exchange)
                             else:
                                 self.__callback(payload)
                             
