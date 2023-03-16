@@ -46,35 +46,35 @@ class ConsumerAsync:
             self.connection = pika.SelectConnection(connection_parameters)
             try:
                 def on_connection_close(*args, **kwargs):
-                    self.logger.msg("Connection closed callback")
+                    self.logger.info("Connection closed callback")
                     self.connection.ioloop.call_later(self.open_retry_interval, self.start)
 
                 def on_connection_open(connection):
-                    self.logger.msg("Connection Open. Callback received")
+                    self.logger.info("Connection Open. Callback received")
                     self.connection.channel(on_open_callback=self.on_open)
                 
                 def on_connection_open_error(*args, **kwargs):
-                    self.logger.msg("Connection Open Error")
+                    self.logger.info("Connection Open Error")
                     self.connection.ioloop.call_later(self.open_retry_interval, self.start)
 
                 self.connection.add_on_open_callback(on_connection_open)
                 self.connection.add_on_close_callback(on_connection_close)
                 self.connection.add_on_open_error_callback(on_connection_open_error)
-                self.logger.msg("Starting IOLoop")
+                self.logger.info("Starting IOLoop")
                 self.connection.ioloop.start()
                 self.connection.ioloop.call_later(self.open_retry_interval, self.start)
-                self.logger.msg(f"Connection Retry Interval {self.open_retry_interval}")
+                self.logger.info(f"Connection Retry Interval {self.open_retry_interval}")
             except Exception as e:
-                self.logger.msg(f"Exception: {e}")
+                self.logger.info(f"Exception: {e}")
                 if self.connection.is_open:
                     self.connection.close()
                 self.connection.ioloop.call_later(self.open_retry_interval, self.start)
-                self.logger.msg(f"Connection Retry Interval {self.open_retry_interval}")
+                self.logger.info(f"Connection Retry Interval {self.open_retry_interval}")
                 self.connection.ioloop.start()
             except KeyboardInterrupt as e:
-                self.logger.msg(f"Interrupt: {e}")
+                self.logger.info(f"Interrupt: {e}")
                 self.connection.close()
-                self.logger.msg("Connection Closed")
+                self.logger.info("Connection Closed")
         except Exception as e:
             self.logger.info(e)
 

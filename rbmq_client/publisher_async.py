@@ -53,34 +53,34 @@ class PublisherAsync:
                 def on_connection_close(*args, **kwargs):
                     if not self._stopping:
                         self.connection.ioloop.call_later(self.open_retry_interval, self.start)
-                        self.logger.msg("Connection closed callback")
+                        self.logger.info("Connection closed callback")
 
                 def on_connection_open(connection):
-                    self.logger.msg("Connection Open. Callback received")
+                    self.logger.info("Connection Open. Callback received")
                     self.connection.channel(on_open_callback=self.on_open)
 
                 def on_connection_open_error(*args, **kwargs):
-                    self.logger.msg("Connection Open Error")
+                    self.logger.info("Connection Open Error")
                     self.connection.ioloop.call_later(self.open_retry_interval, self.start)
 
                 self.connection.add_on_open_callback(on_connection_open)
                 self.connection.add_on_close_callback(on_connection_close)
                 self.connection.add_on_open_error_callback(on_connection_open_error)
-                self.logger.msg("Starting IOLoop")
+                self.logger.info("Starting IOLoop")
                 self.connection.ioloop.start()
             except KeyboardInterrupt as e:
-                self.logger.msg(f"Interrupt: {e}")
+                self.logger.info(f"Interrupt: {e}")
                 self.connection.close()
-                self.logger.msg("Connection Closed")
+                self.logger.info("Connection Closed")
             except Exception as e:
-                self.logger.msg(f"Exception: {e}")
+                self.logger.info(f"Exception: {e}")
                 if self.connection.is_open:
                     self.connection.close()
-                self.logger.msg("Connection Exception")
+                self.logger.info("Connection Exception")
                 # self.connection.ioloop.start()
                 if not self._stopping:
                     self.connection.ioloop.call_later(self.open_retry_interval, self.start)
-                    self.logger.msg(f"Connection Retry Interval {self.open_retry_interval}")
+                    self.logger.info(f"Connection Retry Interval {self.open_retry_interval}")
                     self.connection.ioloop.start()
             
         except Exception as e:
@@ -138,7 +138,7 @@ class PublisherAsync:
                 if sent == False:
                     self._message_queue.put(message_obj)
                 elif self.should_auto_close == True and self._message_queue.empty() == True:
-                    self.logger.msg(f"Message sent and closing automatically")
+                    self.logger.info(f"Message sent and closing automatically")
                     self.connection.ioloop.call_later(10, self.close)
                     return 
             except Exception as e:
@@ -160,7 +160,7 @@ class PublisherAsync:
             return False
 
         routing_key = (routing_key_prefix or self.queue_config.get("routing_key_prefix") or "") + key
-        self.logger.msg(f"Routing Key: {routing_key}")
+        self.logger.info(f"Routing Key: {routing_key}")
         self.channel.basic_publish(self.queue_config.get("exchange"),
                                    routing_key,
                                    message)
