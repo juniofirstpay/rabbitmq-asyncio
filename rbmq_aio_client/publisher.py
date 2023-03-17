@@ -1,4 +1,5 @@
 import json
+import time
 import addict
 import asyncio
 import aio_pika
@@ -81,6 +82,9 @@ class Publisher:
                                    reply_to=reply_queue)
         if self.__is_daemon:
             self.__queue.put([message, routing_key, publish_timeout])
+            if self.__debug:
+                self.__logger.info("Message put in queue",
+                                   queue=self.__queue, quesize=self.__queue.qsize())
         else:
             self.__messages.append([message, routing_key, publish_timeout])
         return self
@@ -139,14 +143,24 @@ class Publisher:
                                                                         timeout=exchange_args.timeout)
             self.__logger.info("Exchange Declared")
             try:
+                self.__logger.info("Starting to read message")
                 while True:
-                    item = self.__queue.get(block=True)
-                    if self.__debug:
-                        self.__logger.debug('Message Profile: {}'.format(item[0].message_id))
-                        
-                    await exchange.publish(item[0], item[1], timeout=item[2])
+                    try:
+                        if self.__debug:
+                            self.__logger.debug('QSize: {}'.format(self.__queue.qsize()))
+                        item = self.__queue.get(block=True, timeout=3)
+                        print(item)
+                        if self.__debug:
+                            self.__logger.debug('Message Profile: {}'.format(item[0].message_id))
+                            
+                        await exchange.publish(item[0], item[1], timeout=item[2])
+                    except queue.Empty:
+                        self.__logger.debug("Queue empty timeout", queue=self.__queue)
+                        time.sleep(5)
+                    except Exception as e:
+                        self.__logger.error(e)
             except Exception as e:
-                print(e)
+                self.__logger.error(e)
             
             await connection.close()
     
@@ -158,5 +172,8 @@ class Publisher:
         def _daemon_thread_worker():
             asyncio.run(self.main_forever(connection, exchange))
             
-        self.__daemon_thread = threading.Thread(target=_daemon_thread_worker, daemon=True)
+        def _daemon_thread_worker(self):
+            asyncio.run(self.main_forever(connection, exchange))
+            
+        self.__daemon_thread = threading.Thread(target=_daemon_thread_worker, args=[self], daemon=True)
         self.__daemon_thread.start()
