@@ -157,7 +157,6 @@ class Publisher:
                         item = None
                     except queue.Empty:
                         self.__logger.debug("Queue empty timeout", queue=self.__queue)
-                        time.sleep(5)
                     except Exception as e:
                         self.__logger.error(e)
                         raise e
