@@ -142,6 +142,7 @@ class Publisher:
                                                                         passive=exchange_args.passive,
                                                                         timeout=exchange_args.timeout)
             self.__logger.info("Exchange Declared")
+            item = None
             try:
                 self.__logger.info("Starting to read message")
                 while True:
@@ -149,16 +150,19 @@ class Publisher:
                         if self.__debug:
                             self.__logger.debug('QSize: {}'.format(self.__queue.qsize()))
                         item = self.__queue.get(block=True, timeout=3)
-                        print(item)
                         if self.__debug:
                             self.__logger.debug('Message Profile: {}'.format(item[0].message_id))
                             
                         await exchange.publish(item[0], item[1], timeout=item[2])
+                        item = None
                     except queue.Empty:
                         self.__logger.debug("Queue empty timeout", queue=self.__queue)
                         time.sleep(5)
                     except Exception as e:
                         self.__logger.error(e)
+                        if item is not None:
+                            self.__queue.put(item, block=True)
+                            self.__logger.info("Message Requed")
             except Exception as e:
                 self.__logger.error(e)
             
