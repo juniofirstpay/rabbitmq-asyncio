@@ -160,11 +160,12 @@ class Publisher:
                         time.sleep(5)
                     except Exception as e:
                         self.__logger.error(e)
-                        if item is not None:
-                            self.__queue.put(item, block=True)
-                            self.__logger.info("Message Requed")
+                        
             except Exception as e:
                 self.__logger.error(e)
+                if item is not None:
+                    self.__queue.put(item, block=True)
+                    self.__logger.info("Message Requed")
             
             await connection.close()
     
