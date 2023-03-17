@@ -48,7 +48,7 @@ class Publisher:
         channel: aio_pika.abc.AbstractChannel = await connection.channel()
         self.__logger.info("Channel Established")
         
-        exchange: aio_pika.Exchange = await channel.declare_exchange(exchange_args.name, 
+        exchange_obj: aio_pika.Exchange = await channel.declare_exchange(exchange_args.name, 
                                                                      exchange_args.type, 
                                                                      durable=exchange_args.durable,
                                                                      auto_delete=exchange_args.auto_delete,
@@ -62,7 +62,7 @@ class Publisher:
                 self.__logger.debug('Message Published @ {}'.format(index))
                 self.__logger.debug('Message Profile: {}'.format(item[0].message_id))
                 
-            await exchange.publish(item[0], item[1], timeout=item[2])
+            await exchange_obj.publish(item[0], item[1], timeout=item[2])
         
         await connection.close()
     
@@ -134,7 +134,7 @@ class Publisher:
             channel: aio_pika.abc.AbstractChannel = await connection.channel()
             self.__logger.info("Channel Established")
             
-            exchange: aio_pika.Exchange = await channel.declare_exchange(exchange_args.name, 
+            exchange_obj: aio_pika.Exchange = await channel.declare_exchange(exchange_args.name, 
                                                                         exchange_args.type, 
                                                                         durable=exchange_args.durable,
                                                                         auto_delete=exchange_args.auto_delete,
@@ -153,7 +153,7 @@ class Publisher:
                         if self.__debug:
                             self.__logger.debug('Message Profile: {}'.format(item[0].message_id))
                             
-                        await exchange.publish(item[0], item[1], timeout=item[2])
+                        await exchange_obj.publish(item[0], item[1], timeout=item[2])
                         item = None
                     except queue.Empty:
                         self.__logger.debug("Queue empty timeout", queue=self.__queue)
