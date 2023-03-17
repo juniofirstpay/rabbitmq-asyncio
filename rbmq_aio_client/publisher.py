@@ -160,6 +160,7 @@ class Publisher:
                         time.sleep(5)
                     except Exception as e:
                         self.__logger.error(e)
+                        raise e
                         
             except Exception as e:
                 self.__logger.error(e)
@@ -173,9 +174,6 @@ class Publisher:
         self.__should_loop = True
         self.__is_daemon = True
         self.__queue = queue.Queue(maxsize=queue_size)
-        
-        def _daemon_thread_worker():
-            asyncio.run(self.main_forever(connection, exchange))
             
         def _daemon_thread_worker(self):
             asyncio.run(self.main_forever(connection, exchange))
