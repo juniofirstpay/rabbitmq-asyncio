@@ -101,8 +101,8 @@ class Subscriber:
                             except Exception as e:
                                 print(e)
                                 raise e
-            except:
-                print(e)
+            except Exception as e:
+                print("Some error occured reacreating connection")
 
     def run(self, connection, queue):
         try:
