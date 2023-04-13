@@ -1,4 +1,5 @@
 import json
+import ast
 import addict
 import asyncio
 import aio_pika
@@ -79,7 +80,10 @@ class Subscriber:
                                 self.__logger.debug("Message Info", key=key, value=value, id=message_info.get('message_id'))
                         try:
                             async with message.process(requeue=True):
-                                payload = json.loads(message.body.decode())
+                                try:
+                                    payload = json.loads(message.body.decode())
+                                except:
+                                    payload = ast.literal_eval(message.body.decode())
                                 
                                 if self.__debug:
                                     self.__logger.debug(pprint.pformat(payload), 
