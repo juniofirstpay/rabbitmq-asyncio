@@ -5,6 +5,7 @@ import asyncio
 import aio_pika
 import aio_pika.abc
 import pprint
+import time
 import traceback
 from typing import Union
 from structlog import get_logger
@@ -18,8 +19,10 @@ class Subscriber:
         self.__callback = callback
         self.__logger = get_logger()
         self.__expose_connection = expose_connection
+        self.__failure_sleep_counter = 0
 
-    async def main(self, loop, connection_type: "Union[str, aio_pika.RobustConnection]", queue: "str"):    
+    async def main(self, loop, connection_type: "Union[str, aio_pika.RobustConnection]", queue: "str"): 
+
         try:
             if isinstance(connection_type, str):
                 connection_args = self.__config.connections.get(connection_type)
@@ -101,7 +104,12 @@ class Subscriber:
                             print(e)
                             raise e
         except Exception as e:
-            print("Some error occured reacreating connection")
+            print(e)
+            self.__logger.error(e)
+            self.__logger.debug(traceback.format_exc())
+            self.__failure_sleep_counter += 1
+            self.__logger.debug("sleeping for {} before recreating connection".format(self.__failure_sleep_counter * 3))
+            time.sleep(self.__failure_sleep_counter * 3)
 
     def run(self, connection, queue):
         while True:
