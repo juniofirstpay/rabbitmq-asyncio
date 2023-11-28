@@ -35,6 +35,7 @@ class Subscriber:
                 raise Exception("Invalid Connection Type")
             
             queue_args = self.__config.queues.get(queue)
+            queue_args = addict.Dict(queue_args)
             exchange_args = self.__config.exchanges.get(queue_args.exchange)
             
             if self.__debug:
@@ -68,8 +69,11 @@ class Subscriber:
                                                                                 auto_delete=queue_args.auto_delete)
                 self.__logger.info("Queue Declared")
                 
-                await queue.bind(exchange,
-                                routing_key=queue_args.routing_key)
+                if queue_args.routing_keys and len(queue_args.routing_keys) > 0:
+                    for routing_key in queue_args.routing_keys:
+                        await queue.bind(exchange, routing_key=routing_key)
+                else:    
+                    await queue.bind(exchange, routing_key=queue_args.routing_key)
                 self.__logger.info("Queue Bound")
                 
                 async with queue.iterator() as queue_iter:
