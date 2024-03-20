@@ -105,19 +105,26 @@ class Publisher:
                     self.logger.error(e)
     
     async def __main(self, connection_type: "Union[str, aio_pika.RobustConnection]", exchange: "str"):
+        delay_counter = 1
         while self.__should_loop:
-            connection = await self.__get_connection(connection_type)
-            channel = await self.__get_channel(connection)
-            exchange_obj = await self.__get_exchange(exchange, channel)
-            
-            if self.__is_daemon:
-                await self.__process_message_queue(exchange_obj)
-            else:
-                await self.__process_message_list(exchange_obj)
-            
-            await connection.close()
-            if self.__is_daemon == False:
-                self.__should_loop = False 
+            try:
+                connection = await self.__get_connection(connection_type)
+                channel = await self.__get_channel(connection)
+                exchange_obj = await self.__get_exchange(exchange, channel)
+                
+                delay_counter = 1
+                if self.__is_daemon:
+                    await self.__process_message_queue(exchange_obj)
+                else:
+                    await self.__process_message_list(exchange_obj)
+                
+                await connection.close()
+                if self.__is_daemon == False:
+                    self.__should_loop = False 
+            except Exception as e:
+                time.sleep(0.3 * delay_counter)
+                delay_counter += 1
+                self.__logger.error(e)
     
     def __run_daemon_thread(self, connection, exchange):
         def _daemon_thread_worker(self: "Publisher"):
